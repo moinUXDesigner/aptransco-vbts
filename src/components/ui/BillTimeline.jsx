@@ -146,10 +146,7 @@ function StepIcon({ state, logOnly }) {
 
 function Connector({ state }) {
   return (
-    <div
-      className={`w-0.5 h-5 mt-0.5 ${state === 'done' ? 'bg-ap-green' : 'bg-ap-gray-200'}`}
-      style={{ marginLeft: 15 }}
-    />
+    <div className={`w-0.5 h-5 mt-0.5 ${state === 'done' ? 'bg-ap-green' : 'bg-ap-gray-200'}`} />
   );
 }
 
