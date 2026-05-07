@@ -4,6 +4,7 @@ import SectionCard from '../../components/ui/SectionCard';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import TimelineSidebar from '../../components/ui/TimelineSidebar';
+import BillReviewModal from '../../components/ui/BillReviewModal';
 
 function fmtAmt(v) { return '₹' + Number(v||0).toLocaleString('en-IN', {minimumFractionDigits:2}); }
 
@@ -21,7 +22,6 @@ const FLOW = [
   'Paid',                   // M10 – HQ SAO (final payment)
 ];
 
-/* Department label automatically set on each advance */
 const STAGE_DEPT = {
   'Submitted':              'AEE – Technical Wing',
   'Pending with AEE':       'AEE – Technical Wing',
@@ -35,53 +35,96 @@ const STAGE_DEPT = {
   'Paid':                   null,
 };
 
+/* Build a human-readable log note from the review form values */
+function buildLogNote(status, values) {
+  const parts = [];
+  if (values.grSeNo)       parts.push(`GR/SE: ${values.grSeNo}`);
+  if (values.form13Ref)    parts.push(`Form-13: ${values.form13Ref}`);
+  if (values.form14Ref)    parts.push(`Form-14: ${values.form14Ref}`);
+  if (values.invoiceDocNo) parts.push(`SAP Invoice: ${values.invoiceDocNo}`);
+  if (values.loaNo)        parts.push(`LOA No: ${values.loaNo}`);
+  if (values.transRef)     parts.push(`Txn Ref: ${values.transRef}`);
+  if (values.recoveriesOk) parts.push('Recoveries: ✓');
+  if (values.docsOk)       parts.push('Documents: ✓');
+  if (values.loaVerified)  parts.push('LOA Verified: ✓');
+  if (values.loaApproved)  parts.push('LOA Approved: ✓');
+  if (values.eeApproved)   parts.push('EE Approval: ✓');
+  if (values.m9aLoans)     parts.push('M9a Loans: ✓');
+  if (values.m9bBnR)       parts.push('M9b B&R: ✓');
+  const detail = parts.join(' · ');
+  const remark = values.remarks ? ` | Remarks: ${values.remarks}` : '';
+  return `${detail}${remark}`.trim() || `Reviewed & approved at ${status}`;
+}
+
 export default function PendingBills() {
   const { submittedBills, setSubmittedBills, showToast } = useApp();
-  const [selectedBill, setSelectedBill] = useState(null);
+  const [selectedBill, setSelectedBill] = useState(null);  // timeline sidebar
+  const [reviewBill,   setReviewBill]   = useState(null);  // review modal
+
   const pending = submittedBills.filter(b => !['Paid','Rejected'].includes(b.status));
 
-  const advance = (billId) => {
+  /* Called by modal on Approve */
+  const handleApprove = (billId, formValues, nextStatus) => {
     setSubmittedBills(prev => prev.map(b => {
       if (b.billId !== billId) return b;
-      const idx  = FLOW.indexOf(b.status);
-      const next = FLOW[Math.min(idx + 1, FLOW.length - 1)];
+
+      const next = nextStatus || FLOW[Math.min(FLOW.indexOf(b.status) + 1, FLOW.length - 1)];
       const dept = STAGE_DEPT[next];
-      const logNote = next === 'HQ LOA Processing'
-        ? 'HQ SAO sends to subordinates — status auto-updated (log only)'
-        : `Status advanced to ${next}`;
+      const logNote = buildLogNote(b.status, formValues);
+
+      const newLog = [...(b.log || []), {
+        date:   new Date().toLocaleDateString('en-IN'),
+        action: logNote,
+        by:     'Employee',
+        status: next,
+      }];
+
+      /* If advancing to HQ LOA Processing (log-only), immediately add the auto-log entry */
+      let finalLog = newLog;
+      let finalStatus = next;
+      let finalDept = dept;
+      if (next === 'HQ LOA Processing') {
+        finalLog = [...newLog, {
+          date:   new Date().toLocaleDateString('en-IN'),
+          action: 'HQ SAO sends to subordinates — HQ LOA Processing (auto log)',
+          by:     'System',
+          status: 'HQ LOA Processing',
+        }];
+      }
+
       const updated = {
         ...b,
-        status:      next,
-        pendingWith: dept || null,
-        pendingDesig:'',
-        log: [...(b.log||[]), {
-          date:   new Date().toLocaleDateString('en-IN'),
-          action: logNote,
-          by:     'Employee',
-          status: next,
-        }],
+        status:      finalStatus,
+        pendingWith: finalDept || null,
+        pendingDesig: '',
+        log: finalLog,
       };
+
       showToast(`Bill ${billId} → ${next}`);
       if (selectedBill?.billId === billId) setSelectedBill(updated);
       return updated;
     }));
+    setReviewBill(null);
   };
 
-  const reject = (billId) => {
+  const handleReject = (billId) => {
     setSubmittedBills(prev => prev.map(b =>
       b.billId === billId
-        ? { ...b, status: 'Rejected', pendingWith: null, log: [...(b.log||[]), { date: new Date().toLocaleDateString('en-IN'), action: 'Bill Rejected', by: 'Employee', status: 'Rejected' }] }
+        ? { ...b, status: 'Rejected', pendingWith: null, log: [...(b.log||[]), { date: new Date().toLocaleDateString('en-IN'), action: 'Bill Rejected by Employee', by: 'Employee', status: 'Rejected' }] }
         : b
     ));
     showToast(`Bill ${billId} rejected.`, true);
     if (selectedBill?.billId === billId) setSelectedBill(null);
+    setReviewBill(null);
   };
 
   return (
     <>
       <SectionCard title="Pending Bills – Submitted by Vendors" noPad>
         {pending.length === 0 ? (
-          <div className="py-12 text-center text-ap-gray-400">No submitted bills pending at this time. Bills submitted by vendors will appear here.</div>
+          <div className="py-12 text-center text-ap-gray-400">
+            No submitted bills pending at this time. Bills submitted by vendors will appear here.
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
@@ -93,32 +136,53 @@ export default function PendingBills() {
                 </tr>
               </thead>
               <tbody>
-                {pending.map((b) => (
-                  <tr
-                    key={b.billId}
-                    className={`border-b border-ap-gray-100 hover:bg-ap-gray-50 transition-colors ${selectedBill?.billId === b.billId ? 'bg-ap-blue-light' : ''}`}
-                  >
-                    <td className="px-3.5 py-2.5 font-sans font-bold text-ap-blue-mid text-xs">{b.billId}</td>
-                    <td className="px-3.5 py-2.5 text-xs">{b.vendorId}</td>
-                    <td className="px-3.5 py-2.5 text-xs">{b.eInvNo}</td>
-                    <td className="px-3.5 py-2.5 text-xs">{b.poNo}</td>
-                    <td className="px-3.5 py-2.5"><Badge status={b.type} /></td>
-                    <td className="px-3.5 py-2.5 font-sans font-bold text-ap-blue text-right">{fmtAmt(b.grossAmt)}</td>
-                    <td className="px-3.5 py-2.5 text-xs text-ap-gray-600">{b.date}</td>
-                    <td className="px-3.5 py-2.5"><Badge status={b.status} /></td>
-                    <td className="px-3.5 py-2.5 text-xs">{b.pendingWith || '—'}</td>
-                    <td className="px-3.5 py-2.5">
-                      <div className="flex gap-1 flex-wrap">
-                        <Button size="xs" variant="outline" onClick={() => setSelectedBill(selectedBill?.billId === b.billId ? null : b)}>
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                          Timeline
-                        </Button>
-                        <Button size="xs" variant="primary" onClick={() => advance(b.billId)}>Advance →</Button>
-                        <Button size="xs" variant="danger"  onClick={() => reject(b.billId)}>Reject</Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {pending.map((b) => {
+                  const isReviewing = reviewBill?.billId === b.billId;
+                  const isTimeline  = selectedBill?.billId === b.billId;
+                  return (
+                    <tr
+                      key={b.billId}
+                      className={`border-b border-ap-gray-100 hover:bg-ap-gray-50 transition-colors
+                        ${isReviewing ? 'bg-yellow-50' : isTimeline ? 'bg-ap-blue-light' : ''}`}
+                    >
+                      <td className="px-3.5 py-2.5 font-mono font-bold text-ap-blue-mid text-xs">{b.billId}</td>
+                      <td className="px-3.5 py-2.5 text-xs">{b.vendorId}</td>
+                      <td className="px-3.5 py-2.5 text-xs">{b.eInvNo}</td>
+                      <td className="px-3.5 py-2.5 text-xs">{b.poNo}</td>
+                      <td className="px-3.5 py-2.5"><Badge status={b.type} /></td>
+                      <td className="px-3.5 py-2.5 font-sans font-bold text-ap-blue text-right">{fmtAmt(b.grossAmt)}</td>
+                      <td className="px-3.5 py-2.5 text-xs text-ap-gray-600">{b.date}</td>
+                      <td className="px-3.5 py-2.5"><Badge status={b.status} /></td>
+                      <td className="px-3.5 py-2.5 text-xs">{b.pendingWith || '—'}</td>
+                      <td className="px-3.5 py-2.5">
+                        <div className="flex gap-1 flex-wrap">
+                          {/* Timeline */}
+                          <Button
+                            size="xs"
+                            variant={isTimeline ? 'primary' : 'outline'}
+                            onClick={() => setSelectedBill(isTimeline ? null : b)}
+                          >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            Timeline
+                          </Button>
+                          {/* Review – opens the stage-specific form */}
+                          <Button
+                            size="xs"
+                            variant="warning"
+                            onClick={() => setReviewBill(b)}
+                          >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Review
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -126,6 +190,13 @@ export default function PendingBills() {
       </SectionCard>
 
       <TimelineSidebar bill={selectedBill} onClose={() => setSelectedBill(null)} />
+
+      <BillReviewModal
+        bill={reviewBill}
+        onClose={() => setReviewBill(null)}
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
     </>
   );
 }
