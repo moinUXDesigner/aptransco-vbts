@@ -50,7 +50,7 @@ export default function VendorApp() {
       notifCount={actionReqd.length}
     >
       {page === 'dashboard' && <VendorDashboard onNavigate={setPage} />}
-      {page === 'submit'    && <SubmitInvoice />}
+      {page === 'submit'    && <SubmitInvoice onNavigate={setPage} />}
       {page === 'bills'     && <MyBills />}
       {page === 'pos'       && <MyPOs />}
       {page === 'inbox'     && <VendorInbox />}

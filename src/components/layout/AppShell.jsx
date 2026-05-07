@@ -4,7 +4,7 @@ import TopBar from './TopBar';
 export default function AppShell({ nav, activePage, onNavigate, pageTitle, roleLabel, userName, userId,
   avatarLabel, avatarBg, onNotif, notifCount, topActions, children }) {
   return (
-    <div className="flex min-h-screen" style={{ background: '#f8f9fb' }}>
+    <div className="flex h-screen" style={{ background: '#f8f9fb' }}>
       <Sidebar
         nav={nav}
         activePage={activePage}
@@ -23,7 +23,7 @@ export default function AppShell({ nav, activePage, onNavigate, pageTitle, roleL
           notifCount={notifCount}
           actions={topActions}
         />
-        <main className="flex-1 overflow-y-auto p-7">
+        <main className="flex-1 overflow-y-auto p-5">
           {children}
         </main>
       </div>
