@@ -44,7 +44,7 @@ export default function AllBills() {
           <thead className="sticky top-0 z-10">
             <tr>
               {['Vendor','PO No.','Type','Gross Inv Amt (₹)','Penalty (₹)','Retention (₹)','Other Rec (₹)','Net Paid (₹)','LOA No.','Payment Date'].map(h => (
-                <th key={h} className="text-left px-3.5 py-2.5 text-xs font-bold text-ap-gray-600 uppercase tracking-wide bg-ap-gray-50 border-b border-ap-gray-200 whitespace-nowrap">{h}</th>
+                <th key={h} className={`${h.includes('₹') ? 'text-right' : 'text-left'} px-3.5 py-2.5 text-xs font-bold text-ap-gray-600 uppercase tracking-wide bg-ap-gray-50 border-b border-ap-gray-200 whitespace-nowrap`}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -56,11 +56,11 @@ export default function AllBills() {
                 <td className="px-3.5 py-2.5 text-xs font-medium">{r.vendorName || VENDOR_MAP[String(r.vendorId)]}</td>
                 <td className="px-3.5 py-2.5 text-xs">{r.poNo}</td>
                 <td className="px-3.5 py-2.5"><Badge status={r._type} /></td>
-                <td className="px-3.5 py-2.5 font-sans font-bold text-ap-blue">{fmtAmt(r.grossInvAmt || r.grossAmt)}</td>
-                <td className="px-3.5 py-2.5 text-ap-red">{fmtAmt(r.penalty)}</td>
-                <td className="px-3.5 py-2.5 text-yellow-700">{fmtAmt(r.retention)}</td>
-                <td className="px-3.5 py-2.5">{fmtAmt(r.otherRecovery)}</td>
-                <td className="px-3.5 py-2.5 font-sans font-bold text-ap-green">{fmtAmt(r.netAmt || r.netPaid)}</td>
+                <td className="px-3.5 py-2.5 font-sans font-bold text-ap-blue text-right">{fmtAmt(r.grossInvAmt || r.grossAmt)}</td>
+                <td className="px-3.5 py-2.5 text-ap-red text-right">{fmtAmt(r.penalty)}</td>
+                <td className="px-3.5 py-2.5 text-yellow-700 text-right">{fmtAmt(r.retention)}</td>
+                <td className="px-3.5 py-2.5 text-right">{fmtAmt(r.otherRecovery)}</td>
+                <td className="px-3.5 py-2.5 font-sans font-bold text-ap-green text-right">{fmtAmt(r.netAmt || r.netPaid)}</td>
                 <td className="px-3.5 py-2.5 text-xs text-ap-blue-mid font-bold">{r.loaNo}</td>
                 <td className="px-3.5 py-2.5 text-xs text-ap-gray-600">{r.paymentDate}</td>
               </tr>

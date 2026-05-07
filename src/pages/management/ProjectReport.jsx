@@ -76,7 +76,7 @@ export default function ProjectReport() {
             <thead className="sticky top-0 z-10">
               <tr>
                 {['Scheme','Records','Gross Billed (₹ Cr)','Net Paid (₹ Cr)','% Paid'].map(h => (
-                  <th key={h} className="text-left px-3 py-2 text-xs font-bold text-ap-gray-600 uppercase tracking-wide bg-ap-gray-50 border-b border-ap-gray-200">{h}</th>
+                  <th key={h} className={`${h.includes('₹') || h === '% Paid' ? 'text-right' : 'text-left'} px-3 py-2 text-xs font-bold text-ap-gray-600 uppercase tracking-wide bg-ap-gray-50 border-b border-ap-gray-200`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -85,9 +85,9 @@ export default function ProjectReport() {
                 <tr key={k} className="border-b border-ap-gray-100 hover:bg-ap-gray-50">
                   <td className="px-3 py-2 font-medium text-ap-gray-800 text-xs">{k}</td>
                   <td className="px-3 py-2 text-xs">{v.count}</td>
-                  <td className="px-3 py-2 font-sans font-bold text-ap-blue text-xs">{fmtCr(v.gross)}</td>
-                  <td className="px-3 py-2 font-sans font-bold text-ap-green text-xs">{fmtCr(v.paid)}</td>
-                  <td className="px-3 py-2 text-xs">{v.gross > 0 ? ((v.paid / v.gross) * 100).toFixed(1) + '%' : '—'}</td>
+                  <td className="px-3 py-2 font-sans font-bold text-ap-blue text-xs text-right">{fmtCr(v.gross)}</td>
+                  <td className="px-3 py-2 font-sans font-bold text-ap-green text-xs text-right">{fmtCr(v.paid)}</td>
+                  <td className="px-3 py-2 text-xs text-right">{v.gross > 0 ? ((v.paid / v.gross) * 100).toFixed(1) + '%' : '—'}</td>
                 </tr>
               ))}
             </tbody>
