@@ -123,21 +123,6 @@ export default function Login() {
           {/* Card body */}
           <div className="px-8 pt-8 pb-6">
 
-            {/* Logo + title */}
-            <div className="flex justify-center mb-4">
-              <div
-                className="rounded-full flex items-center justify-center shadow-md overflow-hidden"
-                style={{ width: 60, height: 60, padding: 6, background: '#005FAD' }}
-              >
-                <img
-                  src={aptranscoLogo}
-                  alt="APTRANSCO"
-                  className="w-full h-full object-contain"
-                  style={{ filter: 'brightness(0) invert(1)' }}
-                />
-              </div>
-            </div>
-
             <h2
               className="text-center mb-0.5"
               style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}
