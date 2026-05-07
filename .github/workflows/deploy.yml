@@ -26,20 +26,18 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: vbts-app/package-lock.json
+          cache-dependency-path: package-lock.json   # repo root = vbts-app/
 
       - name: Install dependencies
-        working-directory: vbts-app
-        run: npm ci
+        run: npm ci                                   # no working-directory — repo root IS vbts-app
 
       - name: Build
-        working-directory: vbts-app
         run: npm run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: vbts-app/dist
+          path: dist                                  # not vbts-app/dist
 
   deploy:
     needs: build
