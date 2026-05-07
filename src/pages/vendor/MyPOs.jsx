@@ -15,8 +15,16 @@ export default function MyPOs() {
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10">
             <tr>
-              {['PO No.','Work Name','Scheme','Type','PO Value Inc.Tax (₹)','GR/SE Value (₹)','Invoice Value (₹)'].map(h => (
-                <th key={h} className="text-left px-3.5 py-2.5 text-xs font-bold text-ap-gray-600 uppercase tracking-wide bg-ap-gray-50 border-b border-ap-gray-200 whitespace-nowrap">{h}</th>
+              {[
+                { label: 'PO No.',                align: 'left'  },
+                { label: 'Work Name',             align: 'left'  },
+                { label: 'Scheme',                align: 'left'  },
+                { label: 'Type',                  align: 'left'  },
+                { label: 'PO Value Inc.Tax (₹)',  align: 'right' },
+                { label: 'GR/SE Value (₹)',       align: 'right' },
+                { label: 'Invoice Value (₹)',     align: 'right' },
+              ].map(h => (
+                <th key={h.label} className={`text-${h.align} px-3.5 py-2.5 text-xs font-bold text-ap-gray-600 uppercase tracking-wide bg-ap-gray-50 border-b border-ap-gray-200 whitespace-nowrap`}>{h.label}</th>
               ))}
             </tr>
           </thead>
@@ -33,9 +41,9 @@ export default function MyPOs() {
                   <td className="px-3.5 py-2.5 font-medium text-ap-gray-800 max-w-48 truncate">{po.workName}</td>
                   <td className="px-3.5 py-2.5 text-xs">{po.schemeDesc?.substring(0, 30)}</td>
                   <td className="px-3.5 py-2.5 text-xs">{po.purchDocType}</td>
-                  <td className="px-3.5 py-2.5 font-sans font-bold text-ap-blue">{fmtAmt(po.poValueIncTax || po.poValue)}</td>
-                  <td className="px-3.5 py-2.5">{fmtAmt(po.valueGRSE)}</td>
-                  <td className="px-3.5 py-2.5 font-sans font-bold text-ap-green">{fmtAmt(invoiceVal)}</td>
+                  <td className="px-3.5 py-2.5 font-sans font-bold text-ap-blue text-right">{fmtAmt(po.poValueIncTax || po.poValue)}</td>
+                  <td className="px-3.5 py-2.5 text-right">{fmtAmt(po.valueGRSE)}</td>
+                  <td className="px-3.5 py-2.5 font-sans font-bold text-ap-green text-right">{fmtAmt(invoiceVal)}</td>
                 </tr>
               );
             })}
