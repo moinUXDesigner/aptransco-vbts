@@ -7,7 +7,20 @@ import TimelineSidebar from '../../components/ui/TimelineSidebar';
 
 function fmtAmt(v) { return '₹' + Number(v||0).toLocaleString('en-IN', {minimumFractionDigits:2}); }
 
-const STATUSES = ['Submitted','Pending with AEE','Under Verification','Reviewed by Engineer','Form13 Updated','Form14 Updated','Approved','Paid','Rejected'];
+/* Flowchart milestone statuses (M1–M10) */
+const STATUSES = [
+  'Submitted',
+  'Pending with AEE',
+  'Pending with DEE',
+  'Pending with EE',
+  'Invoice Posted',
+  'Pending with Field SAO',
+  'Pending with HQ SAO',
+  'HQ LOA Processing',
+  'LOA Processing',
+  'Paid',
+  'Rejected',
+];
 
 export default function MyBills() {
   const { user, submittedBills } = useApp();

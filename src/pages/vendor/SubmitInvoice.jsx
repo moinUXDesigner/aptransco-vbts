@@ -452,15 +452,17 @@ function SuccessScreen({ billId, onMyBills, onNewBill }) {
 
       {/* Mini circle timeline */}
       {(() => {
+        /* Flowchart milestones M1–M10 (HQ LOA Processing is log-only, omitted) */
         const stages = [
-          { label: 'Submitted', done: true },
-          { label: 'AEE'       },
-          { label: 'Verify'    },
-          { label: 'Review'    },
-          { label: 'Form-13'   },
-          { label: 'Form-14'   },
-          { label: 'Approved'  },
-          { label: 'Paid'      },
+          { label: 'Submitted',  done: true },  // M1
+          { label: 'AEE'        },              // M2
+          { label: 'DEE'        },              // M3
+          { label: 'EE'         },              // M4
+          { label: 'Posted'     },              // M5+M6
+          { label: 'Field SAO'  },              // M7
+          { label: 'HQ SAO'     },              // M8
+          { label: 'Loans/B&R'  },              // M9a+M9b
+          { label: 'Paid'       },              // M10
         ];
         return (
           <div className="w-full max-w-md mb-6">
