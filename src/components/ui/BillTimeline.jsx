@@ -146,7 +146,7 @@ function StepIcon({ state, logOnly }) {
 
 function Connector({ state }) {
   return (
-    <div className={`w-0.5 h-5 mt-0.5 ${state === 'done' ? 'bg-ap-green' : 'bg-ap-gray-200'}`} />
+    <div className={`flex-1 w-0.5 min-h-6 ${state === 'done' ? 'bg-ap-green' : 'bg-ap-gray-200'}`} />
   );
 }
 
@@ -246,14 +246,13 @@ export default function BillTimeline({ bill }) {
               'text-ap-gray-300';
 
             return (
-              <div key={step.status}>
-                <div className="flex items-start gap-3">
-                  <div className="flex flex-col items-center">
+              <div key={step.status} className="flex gap-3">
+                  <div className="flex flex-col items-center flex-shrink-0 w-8">
                     <StepIcon state={state} logOnly={step.logOnly} />
                     {!isLast && <Connector state={state} />}
                   </div>
 
-                  <div className="flex-1 pt-1 pb-1">
+                  <div className="flex-1 min-w-0 pt-1 pb-5">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div className="min-w-0">
                         {/* Milestone tag + label */}
@@ -303,7 +302,6 @@ export default function BillTimeline({ bill }) {
                     </div>
                   </div>
                 </div>
-              </div>
             );
           })}
         </div>
